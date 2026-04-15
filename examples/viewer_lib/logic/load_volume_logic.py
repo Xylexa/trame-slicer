@@ -1,3 +1,4 @@
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from slicer import vtkMRMLVolumeNode
@@ -53,6 +54,15 @@ class LoadVolumeLogic(BaseLogic[LoadVolumeState]):
         if not volumes:
             return
         self._show_largest_volume(volumes)
+
+    def load_from_local_path(self, path: str | Path) -> None:
+        path = Path(path)
+        if path.is_dir():
+            files = sorted(str(f) for f in path.rglob("*") if f.is_file())
+        else:
+            files = [str(path)]
+        self._slicer_app.scene.Clear()
+        self._on_load_volume_files(files)
 
     def _show_largest_volume(self, volumes):
         if not volumes:

@@ -54,5 +54,8 @@ class MedicalViewerLogic(BaseLogic[ViewerLayoutState]):
         self._slab_logic.set_ui(ui.slab_button)
         self._mpr_logic.set_ui(ui.mpr_interaction_button)
 
+    def load_demo_data(self, path: str) -> None:
+        self._load_files_logic.load_from_local_path(path)
+
     def _on_volume_changed(self, *_args):
         self.data.is_volume_loaded = True

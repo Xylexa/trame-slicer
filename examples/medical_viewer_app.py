@@ -9,6 +9,8 @@ except ModuleNotFoundError:
 
 from trame_slicer.core import SlicerApp
 
+DEMO_DATA_PATH = "/home/ibraaheemakbar/Documents/dicoms_seg_file_results"
+
 
 @TrameApp()
 class MedicalViewerApp:
@@ -19,6 +21,7 @@ class MedicalViewerApp:
         self._logic = MedicalViewerLogic(self._server, self._slicer_app)
         self._ui = MedicalViewerUI(self._server, self._logic.layout_manager)
         self._logic.set_ui(self._ui)
+        self._logic.load_demo_data(DEMO_DATA_PATH)
 
     @property
     def server(self):
