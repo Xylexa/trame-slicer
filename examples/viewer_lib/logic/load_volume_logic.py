@@ -33,16 +33,30 @@ class LoadVolumeLogic(BaseLogic[LoadVolumeState]):
         if not files:
             return
 
-        # Remove previous data
-        self._slicer_app.scene.Clear()
-
-        # Load new volumes and display the first one
         with TemporaryDirectory() as tmp_dir:
             loaded_files = write_client_files_to_dir(files, tmp_dir)
             if len(loaded_files) == 1 and loaded_files[0].endswith(".mrb"):
+                self._slicer_app.scene.Clear()
                 self._on_load_scene(loaded_files[0])
             else:
-                self._on_load_volume_files(loaded_files)
+                self._on_load_mixed_files(loaded_files)
+
+    @classmethod
+    def _is_segmentation_file(cls, file_path: str, slicer_app: SlicerApp) -> bool:
+        return slicer_app.io_manager.is_segmentation_file(file_path)
+
+    def _on_load_mixed_files(self, loaded_files: list[str]) -> None:
+        segmentation_files = [f for f in loaded_files if self._is_segmentation_file(f, self._slicer_app)]
+        volume_files = [f for f in loaded_files if not self._is_segmentation_file(f, self._slicer_app)]
+
+        if volume_files:
+            self._slicer_app.scene.Clear()
+            self._on_load_volume_files(volume_files)
+
+        if segmentation_files:
+            self._on_load_segmentation_files(segmentation_files)
+            # If a volume is already loaded, re-emit it so segmentation/editor state syncs.
+            self._emit_current_volume()
 
     def _on_load_scene(self, scene_file):
         self._slicer_app.io_manager.load_scene(scene_file)
@@ -50,6 +64,20 @@ class LoadVolumeLogic(BaseLogic[LoadVolumeState]):
 
     def _on_load_volume_files(self, loaded_files):
         volumes = self._slicer_app.io_manager.load_volumes(loaded_files)
+        if not volumes:
+            return
+        self._show_largest_volume(volumes)
+
+    def _on_load_segmentation_files(self, segmentation_files: list[str]) -> None:
+        for segmentation_file in segmentation_files:
+            segmentation_node = self._slicer_app.io_manager.load_segmentation(segmentation_file)
+            if not segmentation_node:
+                continue
+            segmentation_node.CreateDefaultDisplayNodes()
+            segmentation_node.SetDisplayVisibility(True)
+
+    def _emit_current_volume(self) -> None:
+        volumes = list(self._slicer_app.scene.GetNodesByClass("vtkMRMLVolumeNode"))
         if not volumes:
             return
         self._show_largest_volume(volumes)
