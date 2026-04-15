@@ -168,7 +168,16 @@ class SegmentEditorLogic(BaseSegmentationLogic[SegmentEditorState]):
     def on_volume_changed(self, volume_node: vtkMRMLVolumeNode) -> None:
         segmentation_nodes = list(self.scene.GetNodesByClass("vtkMRMLSegmentationNode"))
         if segmentation_nodes:
-            segmentation_node = segmentation_nodes[0]
+            # Prefer the most recently added non-empty segmentation (e.g. imported SEG),
+            # and fall back to the latest node if all are empty.
+            segmentation_node = next(
+                (
+                    node
+                    for node in reversed(segmentation_nodes)
+                    if node.GetSegmentation() and node.GetSegmentation().GetNumberOfSegments() > 0
+                ),
+                segmentation_nodes[-1],
+            )
         else:
             segmentation_node = self.segmentation_editor.create_empty_segmentation_node()
 
