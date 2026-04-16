@@ -84,7 +84,7 @@ Bottom line:
 ## Startup Instructions (Fresh Clone)
 
 ```bash
-git clone <https://github.com/Xylexa/trame-slicer>
+git clone https://github.com/Xylexa/trame-slicer
 cd trame-slicer
 python3 -m venv .venv
 source .venv/bin/activate

@@ -1,0 +1,12 @@
+services:
+  trame-slicer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trame-slicer
+    environment:
+      VTK_DEFAULT_OPENGL_WINDOW: vtkOSOpenGLRenderWindow
+    ports:
+      - "8080:8080"
+    shm_size: "1gb"
+    restart: unless-stopped
